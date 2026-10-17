@@ -12,7 +12,12 @@ export const customerService = {
   async list(auth, query) {
     const where = getScope(auth);
     if (query.status) where.status = query.status;
-    if (query.search) where.OR = [{ name: { contains: query.search, mode: "insensitive" } }, { phone: { contains: query.search, mode: "insensitive" } }, { email: { contains: query.search, mode: "insensitive" } }];
+    if (query.search)
+      where.OR = [
+        { name: { contains: query.search, mode: "insensitive" } },
+        { phone: { contains: query.search, mode: "insensitive" } },
+        { email: { contains: query.search, mode: "insensitive" } },
+      ];
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([
@@ -29,7 +34,8 @@ export const customerService = {
   },
   async create(auth, input) {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
-    if (!branchId) throw new ApiError(400, "branchId is required for admin-created records");
+    if (!branchId)
+      throw new ApiError(400, "branchId is required for admin-created records");
     await validateStaff(auth, input.staffId, branchId);
     return customerModel.create({ ...input, branchId });
   },
@@ -49,5 +55,6 @@ async function validateStaff(auth, staffId, branchId) {
   if (!staffId) return;
   const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
   const staff = await staffModel.findFirst({ id: staffId, ...scope });
-  if (!staff) throw new ApiError(400, "staffId is invalid or outside this branch");
+  if (!staff)
+    throw new ApiError(400, "staffId is invalid or outside this branch");
 }

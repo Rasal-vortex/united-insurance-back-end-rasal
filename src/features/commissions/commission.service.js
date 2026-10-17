@@ -29,14 +29,22 @@ export const commissionService = {
   },
   async create(auth, input) {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
-    if (!branchId) throw new ApiError(400, "branchId is required for admin-created records");
+    if (!branchId)
+      throw new ApiError(400, "branchId is required for admin-created records");
     await validateRelations(auth, input, branchId);
     return commissionModel.create({ ...input, branchId });
   },
   async update(auth, id, input) {
     const current = await this.get(auth, id);
     delete input.branchId;
-    await validateRelations(auth, { customerId: input.customerId ?? current.customerId, policyId: input.policyId ?? current.policyId }, current.branchId);
+    await validateRelations(
+      auth,
+      {
+        customerId: input.customerId ?? current.customerId,
+        policyId: input.policyId ?? current.policyId,
+      },
+      current.branchId,
+    );
     return commissionModel.update(id, input);
   },
 };
@@ -45,11 +53,22 @@ async function validateRelations(auth, input, branchId) {
   const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
   let customer;
   if (input.customerId) {
-    customer = await customerModel.findFirst({ id: input.customerId, ...scope });
-    if (!customer) throw new ApiError(400, "customerId is invalid or outside this branch");
+    customer = await customerModel.findFirst({
+      id: input.customerId,
+      ...scope,
+    });
+    if (!customer)
+      throw new ApiError(400, "customerId is invalid or outside this branch");
   }
   if (input.policyId) {
-    const policy = await policyModel.findFirst({ id: input.policyId, ...scope });
-    if (!policy || (input.customerId && policy.customerId !== input.customerId)) throw new ApiError(400, "policyId is invalid or does not belong to the selected customer");
+    const policy = await policyModel.findFirst({
+      id: input.policyId,
+      ...scope,
+    });
+    if (!policy || (input.customerId && policy.customerId !== input.customerId))
+      throw new ApiError(
+        400,
+        "policyId is invalid or does not belong to the selected customer",
+      );
   }
 }

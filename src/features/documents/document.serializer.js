@@ -8,7 +8,9 @@ export function serializeDocument(record) {
     claimId: record.claimId,
     type: record.type,
     fileName: record.fileName,
-    fileUrl: record.fileUrl?.startsWith("/uploads/") ? `/api/documents/${record.id}/content` : record.fileUrl,
+    fileUrl: record.fileUrl?.startsWith("/uploads/")
+      ? `/api/documents/${record.id}/content`
+      : record.fileUrl,
     uploadedAt: record.uploadedAt,
   };
 }

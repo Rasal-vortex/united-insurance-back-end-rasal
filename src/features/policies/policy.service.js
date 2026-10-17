@@ -13,7 +13,12 @@ export const policyService = {
   async list(auth, query) {
     const where = getScope(auth);
     if (query.status) where.status = query.status;
-    if (query.search) where.OR = [{ policyNumber: { contains: query.search, mode: "insensitive" } }, { insurer: { contains: query.search, mode: "insensitive" } }, { product: { contains: query.search, mode: "insensitive" } }];
+    if (query.search)
+      where.OR = [
+        { policyNumber: { contains: query.search, mode: "insensitive" } },
+        { insurer: { contains: query.search, mode: "insensitive" } },
+        { product: { contains: query.search, mode: "insensitive" } },
+      ];
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([
@@ -30,14 +35,29 @@ export const policyService = {
   },
   async create(auth, input) {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
-    if (!branchId) throw new ApiError(400, "branchId is required for admin-created records");
+    if (!branchId)
+      throw new ApiError(400, "branchId is required for admin-created records");
     const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
-    const customer = await customerModel.findFirst({ id: input.customerId, ...scope });
-    if (!customer) throw new ApiError(400, "customerId is invalid or outside this branch");
+    const customer = await customerModel.findFirst({
+      id: input.customerId,
+      ...scope,
+    });
+    if (!customer)
+      throw new ApiError(400, "customerId is invalid or outside this branch");
     return prisma.$transaction(async (tx) => {
       const policy = await policyModel.create({ ...input, branchId }, tx);
-      await tx.renewal.create({ data: { branchId, policyId: policy.id, dueDate: policy.expiryDate } });
-      await tx.activity.create({ data: { branchId, customerId: policy.customerId, type: "POLICY_CREATED", title: "Policy added", description: `Policy ${policy.policyNumber} was added` } });
+      await tx.renewal.create({
+        data: { branchId, policyId: policy.id, dueDate: policy.expiryDate },
+      });
+      await tx.activity.create({
+        data: {
+          branchId,
+          customerId: policy.customerId,
+          type: "POLICY_CREATED",
+          title: "Policy added",
+          description: `Policy ${policy.policyNumber} was added`,
+        },
+      });
       return policy;
     });
   },
@@ -45,9 +65,16 @@ export const policyService = {
     const current = await this.get(auth, id);
     delete input.branchId;
     if (input.customerId) {
-      const scope = auth.userType === "ADMIN" ? { branchId: current.branchId } : getScope(auth);
-      const customer = await customerModel.findFirst({ id: input.customerId, ...scope });
-      if (!customer) throw new ApiError(400, "customerId is invalid or outside this branch");
+      const scope =
+        auth.userType === "ADMIN"
+          ? { branchId: current.branchId }
+          : getScope(auth);
+      const customer = await customerModel.findFirst({
+        id: input.customerId,
+        ...scope,
+      });
+      if (!customer)
+        throw new ApiError(400, "customerId is invalid or outside this branch");
     }
     return policyModel.update(id, input);
   },

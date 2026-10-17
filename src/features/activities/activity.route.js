@@ -8,7 +8,19 @@ import { activityQuerySchema, activityIdSchema } from "./activity.schema.js";
 
 const router = Router();
 
-router.get("/", authenticate, authorize("activity:read"), validate(activityQuerySchema, "query"), asyncHandler(activityController.list));
-router.get("/:id", authenticate, authorize("activity:read"), validate(activityIdSchema, "params"), asyncHandler(activityController.get));
+router.get(
+  "/",
+  authenticate,
+  authorize("activity:read"),
+  validate(activityQuerySchema, "query"),
+  asyncHandler(activityController.list),
+);
+router.get(
+  "/:id",
+  authenticate,
+  authorize("activity:read"),
+  validate(activityIdSchema, "params"),
+  asyncHandler(activityController.get),
+);
 
 export default router;

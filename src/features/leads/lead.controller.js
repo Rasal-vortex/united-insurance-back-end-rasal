@@ -20,13 +20,11 @@ export const leadController = {
   },
   async create(req, res) {
     const record = await leadService.create(req.auth, req.body);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Lead created successfully",
-        data: serializeLead(record),
-      });
+    res.status(201).json({
+      success: true,
+      message: "Lead created successfully",
+      data: serializeLead(record),
+    });
   },
   async update(req, res) {
     const record = await leadService.update(req.auth, req.params.id, req.body);
@@ -46,15 +44,13 @@ export const leadController = {
   },
   async convert(req, res) {
     const result = await leadService.convert(req.auth, req.params.id);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Lead converted successfully",
-        data: {
-          customer: serializeCustomer(result.customer),
-          leadId: result.leadId,
-        },
-      });
+    res.status(201).json({
+      success: true,
+      message: "Lead converted successfully",
+      data: {
+        customer: serializeCustomer(result.customer),
+        leadId: result.leadId,
+      },
+    });
   },
 };

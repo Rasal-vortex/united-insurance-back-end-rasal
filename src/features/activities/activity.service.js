@@ -10,7 +10,11 @@ function getScope(auth) {
 export const activityService = {
   async list(auth, query) {
     const where = getScope(auth);
-    if (query.search) where.OR = [{ title: { contains: query.search, mode: "insensitive" } }, { type: { contains: query.search, mode: "insensitive" } }];
+    if (query.search)
+      where.OR = [
+        { title: { contains: query.search, mode: "insensitive" } },
+        { type: { contains: query.search, mode: "insensitive" } },
+      ];
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([

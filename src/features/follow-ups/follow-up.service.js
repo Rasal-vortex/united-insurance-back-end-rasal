@@ -14,7 +14,8 @@ export const followupService = {
   async list(auth, query) {
     const where = getScope(auth);
     if (query.status) where.status = query.status;
-    if (query.search) where.OR = [{ title: { contains: query.search, mode: "insensitive" } }];
+    if (query.search)
+      where.OR = [{ title: { contains: query.search, mode: "insensitive" } }];
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([
@@ -31,7 +32,8 @@ export const followupService = {
   },
   async create(auth, input) {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
-    if (!branchId) throw new ApiError(400, "branchId is required for admin-created records");
+    if (!branchId)
+      throw new ApiError(400, "branchId is required for admin-created records");
     await validateRelations(auth, input, branchId);
     return followupModel.create({ ...input, branchId });
   },
@@ -49,7 +51,19 @@ export const followupService = {
 
 async function validateRelations(auth, input, branchId) {
   const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
-  if (input.customerId && !(await customerModel.findFirst({ id: input.customerId, ...scope }))) throw new ApiError(400, "customerId is invalid or outside this branch");
-  if (input.leadId && !(await leadModel.findFirst({ id: input.leadId, ...scope }))) throw new ApiError(400, "leadId is invalid or outside this branch");
-  if (input.staffId && !(await staffModel.findFirst({ id: input.staffId, ...scope }))) throw new ApiError(400, "staffId is invalid or outside this branch");
+  if (
+    input.customerId &&
+    !(await customerModel.findFirst({ id: input.customerId, ...scope }))
+  )
+    throw new ApiError(400, "customerId is invalid or outside this branch");
+  if (
+    input.leadId &&
+    !(await leadModel.findFirst({ id: input.leadId, ...scope }))
+  )
+    throw new ApiError(400, "leadId is invalid or outside this branch");
+  if (
+    input.staffId &&
+    !(await staffModel.findFirst({ id: input.staffId, ...scope }))
+  )
+    throw new ApiError(400, "staffId is invalid or outside this branch");
 }

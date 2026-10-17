@@ -30,9 +30,13 @@ export const renewalService = {
     const current = await this.get(auth, id);
     delete input.branchId;
     const policyId = input.policyId ?? current.policyId;
-    const scope = auth.userType === "ADMIN" ? { branchId: current.branchId } : getScope(auth);
+    const scope =
+      auth.userType === "ADMIN"
+        ? { branchId: current.branchId }
+        : getScope(auth);
     const policy = await policyModel.findFirst({ id: policyId, ...scope });
-    if (!policy) throw new ApiError(400, "policyId is invalid or outside this branch");
+    if (!policy)
+      throw new ApiError(400, "policyId is invalid or outside this branch");
     return renewalModel.update(id, input);
   },
 };

@@ -49,12 +49,10 @@ export const documentController = {
       req.documentMetadata,
       req.file,
     );
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Document uploaded successfully",
-        data: serializeDocument(record),
-      });
+    res.status(201).json({
+      success: true,
+      message: "Document uploaded successfully",
+      data: serializeDocument(record),
+    });
   },
 };

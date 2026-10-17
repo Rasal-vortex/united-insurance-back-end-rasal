@@ -11,7 +11,12 @@ export const staffService = {
   async list(auth, query) {
     const where = getScope(auth);
     if (query.status) where.status = query.status;
-    if (query.search) where.OR = [{ name: { contains: query.search, mode: "insensitive" } }, { phone: { contains: query.search, mode: "insensitive" } }, { email: { contains: query.search, mode: "insensitive" } }];
+    if (query.search)
+      where.OR = [
+        { name: { contains: query.search, mode: "insensitive" } },
+        { phone: { contains: query.search, mode: "insensitive" } },
+        { email: { contains: query.search, mode: "insensitive" } },
+      ];
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([
@@ -28,7 +33,8 @@ export const staffService = {
   },
   async create(auth, input) {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
-    if (!branchId) throw new ApiError(400, "branchId is required for admin-created records");
+    if (!branchId)
+      throw new ApiError(400, "branchId is required for admin-created records");
     return staffModel.create({ ...input, branchId });
   },
   async update(auth, id, input) {
