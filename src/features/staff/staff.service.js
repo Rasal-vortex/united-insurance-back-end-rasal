@@ -3,6 +3,8 @@ import { ApiError } from "../../utils/ApiError.js";
 import { staffModel } from "./staff.model.js";
 
 function getScope(auth) {
+  console.log(auth);
+
   if (auth.userType === "ADMIN") return {};
   return { branchId: auth.branchId };
 }
@@ -20,7 +22,19 @@ export const staffService = {
     const { skip, take } = getPagination(query.page, query.limit);
     const orderBy = { [query.sortBy || "createdAt"]: query.sortOrder };
     const [records, total] = await Promise.all([
-      staffModel.findMany({ where, skip, take, orderBy }),
+      staffModel.findMany({
+        where,
+        skip,
+        take,
+        orderBy,
+        include: {
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
       staffModel.count(where),
     ]);
     return { records, meta: getPaginationMeta(total, query.page, query.limit) };

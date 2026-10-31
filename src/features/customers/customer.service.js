@@ -39,6 +39,7 @@ export const customerService = {
     await validateStaff(auth, input.staffId, branchId);
     return customerModel.create({ ...input, branchId });
   },
+
   async update(auth, id, input) {
     const current = await this.get(auth, id);
     await validateStaff(auth, input.staffId, current.branchId);

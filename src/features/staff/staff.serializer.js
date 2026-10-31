@@ -11,5 +11,6 @@ export function serializeStaff(record) {
     joiningDate: record.joiningDate,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
+    branchName: record.branch?.name,
   };
 }
