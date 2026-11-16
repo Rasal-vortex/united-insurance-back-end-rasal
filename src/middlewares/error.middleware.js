@@ -1,4 +1,4 @@
-import { Prisma } from "../../generated/prisma/client.ts";
+import { Prisma } from "../../generated/prisma/client.js";
 import { ZodError } from "zod";
 
 export function errorHandler(error, _req, res, _next) {
