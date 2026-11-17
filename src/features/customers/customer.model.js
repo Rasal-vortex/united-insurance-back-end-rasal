@@ -10,6 +10,29 @@ export const customerModel = {
   findFirst(where, client = prisma) {
     return client.customer.findFirst({ where });
   },
+  findFirstInBranch(id, branchId, client = prisma) {
+    return client.customer.findFirst({
+      where: { id, branchMemberships: { some: { branchId } } },
+    });
+  },
+  findByNormalizedPhone(phoneNormalized, client = prisma) {
+    return client.customer.findUnique({ where: { phoneNormalized } });
+  },
+  addBranchMembership(customerId, branchId, client = prisma) {
+    return client.customerBranch.upsert({
+      where: { branchId_customerId: { branchId, customerId } },
+      create: { branchId, customerId },
+      update: {},
+    });
+  },
+  listBranchMemberships(customerId, client = prisma) {
+    return client.customerBranch.findMany({ where: { customerId } });
+  },
+  removeBranchMembership(customerId, branchId, client = prisma) {
+    return client.customerBranch.delete({
+      where: { branchId_customerId: { branchId, customerId } },
+    });
+  },
   create(data, client = prisma) {
     return client.customer.create({ data });
   },

@@ -4,6 +4,7 @@ import { leadModel } from "./lead.model.js";
 import { staffModel } from "../staff/staff.model.js";
 import { customerModel } from "../customers/customer.model.js";
 import { prisma } from "../../config/prisma.js";
+import { normalizePhoneNumber } from "../../utils/phone.js";
 
 function getScope(auth) {
   if (auth.userType === "ADMIN") return {};
@@ -53,38 +54,56 @@ export const leadService = {
     const lead = await this.get(auth, id);
     if (lead.convertedCustomerId)
       throw new ApiError(409, "Lead has already been converted");
-    return prisma.$transaction(async (tx) => {
-      const customer = await customerModel.create(
-        {
-          branchId: lead.branchId,
-          staffId: lead.staffId,
-          name: lead.name,
-          phone: lead.phone,
-          email: lead.email,
-          notes: lead.notes,
-        },
-        tx,
-      );
-      await leadModel.update(
-        id,
-        {
-          status: "CONVERTED",
-          convertedCustomerId: customer.id,
-          convertedAt: new Date(),
-        },
-        tx,
-      );
-      await tx.activity.create({
-        data: {
-          branchId: lead.branchId,
-          customerId: customer.id,
-          type: "LEAD_CONVERTED",
-          title: "Lead converted to customer",
-          description: `Lead ${lead.name} was converted`,
-        },
-      });
-      return { customer, leadId: lead.id };
-    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        return await prisma.$transaction(async (tx) => {
+          const currentLead = await leadModel.findFirst({ id: lead.id }, tx);
+          if (currentLead.convertedCustomerId)
+            throw new ApiError(409, "Lead has already been converted");
+
+          const phoneNormalized = normalizePhoneNumber(currentLead.phone);
+          let customer = await customerModel.findByNormalizedPhone(phoneNormalized, tx);
+          if (customer) {
+            await customerModel.addBranchMembership(customer.id, currentLead.branchId, tx);
+          } else {
+            customer = await customerModel.create(
+              {
+                branchId: currentLead.branchId,
+                staffId: currentLead.staffId,
+                name: currentLead.name,
+                phone: phoneNormalized,
+                phoneNormalized,
+                email: currentLead.email,
+                notes: currentLead.notes,
+              },
+              tx,
+            );
+            await customerModel.addBranchMembership(customer.id, currentLead.branchId, tx);
+          }
+          await leadModel.update(
+            id,
+            {
+              status: "CONVERTED",
+              convertedCustomerId: customer.id,
+              convertedAt: new Date(),
+            },
+            tx,
+          );
+          await tx.activity.create({
+            data: {
+              branchId: currentLead.branchId,
+              customerId: customer.id,
+              type: "LEAD_CONVERTED",
+              title: "Lead converted to customer",
+              description: `Lead ${currentLead.name} was converted`,
+            },
+          });
+          return { customer, leadId: currentLead.id };
+        });
+      } catch (error) {
+        if (error?.code !== "P2002" || attempt === 1) throw error;
+      }
+    }
   },
 };
 

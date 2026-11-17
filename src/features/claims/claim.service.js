@@ -54,11 +54,11 @@ export const claimService = {
 };
 
 async function validateRelations(auth, input, branchId) {
-  const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
-  const customer = await customerModel.findFirst({
-    id: input.customerId,
-    ...scope,
-  });
+  const scope = { branchId };
+  const customer = await customerModel.findFirstInBranch(
+    input.customerId,
+    branchId,
+  );
   if (!customer)
     throw new ApiError(400, "customerId is invalid or outside this branch");
   if (input.policyId) {

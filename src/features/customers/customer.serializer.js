@@ -4,7 +4,7 @@ export function serializeCustomer(record) {
     id: record.id,
     branchId: record.branchId,
     name: record.name,
-    phone: record.phone,
+    phone: record.phoneNormalized || record.phone,
     email: record.email,
     dob: record.dob,
     gender: record.gender,

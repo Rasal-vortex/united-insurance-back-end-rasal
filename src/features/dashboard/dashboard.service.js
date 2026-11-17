@@ -25,7 +25,9 @@ export const dashboardService = {
         auth.userType === "ADMIN" ? {} : { where: { id: auth.branchId } },
       ),
       prisma.staff.count({ where: scope }),
-      prisma.customer.count({ where: scope }),
+      auth.userType === "ADMIN"
+        ? prisma.customer.count()
+        : prisma.customerBranch.count({ where: { branchId: auth.branchId } }),
       prisma.lead.count({
         where: { ...scope, status: { notIn: ["CONVERTED", "LOST"] } },
       }),

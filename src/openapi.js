@@ -115,7 +115,12 @@ const staff = {
 };
 const customer = {
   name: { type: "string" },
-  phone: { type: "string", minLength: 5 },
+  phone: {
+    type: "string",
+    minLength: 5,
+    description:
+      "Normalized to E.164-like form. Ten-digit numbers are treated as India (+91). A matching number reuses the existing customerId.",
+  },
   email: { type: "string", format: "email", nullable: true },
   dob: { type: "string", format: "date-time", nullable: true },
   gender: { type: "string", nullable: true },
@@ -123,6 +128,11 @@ const customer = {
   notes: { type: "string", nullable: true },
   status: { type: "string", enum: ["ACTIVE", "INACTIVE"] },
   staffId: { type: "string", format: "uuid", nullable: true },
+};
+const vehicle = {
+  registrationNumber: { type: "string", minLength: 1, maxLength: 40 },
+  vehicleType: { type: "string", minLength: 1, maxLength: 80 },
+  details: { type: "string", nullable: true, maxLength: 2000 },
 };
 const lead = {
   name: { type: "string" },
@@ -243,8 +253,28 @@ const paths = {
     update: true,
     remove: true,
     description:
-      "BRANCH only. Optional staffId must belong to the same branch.",
+      "BRANCH only. Optional staffId must belong to the same branch. A repeated normalized phone reuses the original customerId and adds this branch to the account.",
   }),
+  "/api/customers/{id}/vehicles": {
+    parameters: [idParameter],
+    get: op("Vehicle", "List vehicles for a customer"),
+    post: op("Vehicle", "Add a vehicle to a customer", {
+      schema: "CreateVehicle",
+      status: 201,
+      description: "BRANCH only. The customer must be visible to the branch.",
+    }),
+  },
+  "/api/customers/{id}/vehicles/{vehicleId}": {
+    parameters: [idParameter, {
+      name: "vehicleId",
+      in: "path",
+      required: true,
+      schema: { type: "string", format: "uuid" },
+    }],
+    get: op("Vehicle", "Get a customer vehicle"),
+    patch: op("Vehicle", "Update a customer vehicle", { schema: "UpdateVehicle" }),
+    delete: op("Vehicle", "Delete a customer vehicle"),
+  },
   ...resource("/api/leads", "Lead", {
     create: true,
     update: true,
@@ -352,6 +382,7 @@ export const openapiSpec = {
     "Branches",
     "Staff",
     "Customer",
+    "Vehicle",
     "Lead",
     "Policy",
     "Renewals",
@@ -389,6 +420,8 @@ export const openapiSpec = {
       UpdateStaff: partial(staff),
       CreateCustomer: model(customer, ["name", "phone"]),
       UpdateCustomer: partial(customer),
+      CreateVehicle: model(vehicle, ["registrationNumber", "vehicleType"]),
+      UpdateVehicle: partial(vehicle),
       CreateLead: model(lead, ["name", "phone"]),
       UpdateLead: partial(lead),
       CreatePolicy: model(policy, [

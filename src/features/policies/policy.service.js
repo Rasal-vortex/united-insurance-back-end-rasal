@@ -37,11 +37,10 @@ export const policyService = {
     const branchId = auth.userType === "ADMIN" ? input.branchId : auth.branchId;
     if (!branchId)
       throw new ApiError(400, "branchId is required for admin-created records");
-    const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
-    const customer = await customerModel.findFirst({
-      id: input.customerId,
-      ...scope,
-    });
+    const customer = await customerModel.findFirstInBranch(
+      input.customerId,
+      branchId,
+    );
     if (!customer)
       throw new ApiError(400, "customerId is invalid or outside this branch");
     return prisma.$transaction(async (tx) => {
@@ -65,14 +64,10 @@ export const policyService = {
     const current = await this.get(auth, id);
     delete input.branchId;
     if (input.customerId) {
-      const scope =
-        auth.userType === "ADMIN"
-          ? { branchId: current.branchId }
-          : getScope(auth);
-      const customer = await customerModel.findFirst({
-        id: input.customerId,
-        ...scope,
-      });
+      const customer = await customerModel.findFirstInBranch(
+        input.customerId,
+        current.branchId,
+      );
       if (!customer)
         throw new ApiError(400, "customerId is invalid or outside this branch");
     }

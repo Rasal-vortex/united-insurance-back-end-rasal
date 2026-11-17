@@ -18,11 +18,11 @@ export const customerController = {
     res.json({ success: true, data: serializeCustomer(record) });
   },
   async create(req, res) {
-    const record = await customerService.create(req.auth, req.body);
-    res.status(201).json({
+    const result = await customerService.create(req.auth, req.body);
+    res.status(result.created ? 201 : 200).json({
       success: true,
-      message: "Customer created successfully",
-      data: serializeCustomer(record),
+      message: result.created ? "Customer created successfully" : "Existing customer account found",
+      data: serializeCustomer(result.record),
     });
   },
   async update(req, res) {

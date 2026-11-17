@@ -50,21 +50,14 @@ export const commissionService = {
 };
 
 async function validateRelations(auth, input, branchId) {
-  const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
   let customer;
   if (input.customerId) {
-    customer = await customerModel.findFirst({
-      id: input.customerId,
-      ...scope,
-    });
+    customer = await customerModel.findFirstInBranch(input.customerId, branchId);
     if (!customer)
       throw new ApiError(400, "customerId is invalid or outside this branch");
   }
   if (input.policyId) {
-    const policy = await policyModel.findFirst({
-      id: input.policyId,
-      ...scope,
-    });
+    const policy = await policyModel.findFirst({ id: input.policyId, branchId });
     if (!policy || (input.customerId && policy.customerId !== input.customerId))
       throw new ApiError(
         400,

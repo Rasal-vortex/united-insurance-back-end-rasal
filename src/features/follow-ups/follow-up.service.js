@@ -53,7 +53,7 @@ async function validateRelations(auth, input, branchId) {
   const scope = auth.userType === "ADMIN" ? { branchId } : getScope(auth);
   if (
     input.customerId &&
-    !(await customerModel.findFirst({ id: input.customerId, ...scope }))
+    !(await customerModel.findFirstInBranch(input.customerId, branchId))
   )
     throw new ApiError(400, "customerId is invalid or outside this branch");
   if (

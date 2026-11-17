@@ -6,7 +6,9 @@ export const reportsService = {
   async summary(auth) {
     const where = this.scope(auth);
     const [customers, leads, policies, claims] = await Promise.all([
-      prisma.customer.count({ where }),
+      auth.userType === "ADMIN"
+        ? prisma.customer.count()
+        : prisma.customerBranch.count({ where: { branchId: auth.branchId } }),
       prisma.lead.count({ where }),
       prisma.policy.count({ where }),
       prisma.claim.count({ where }),

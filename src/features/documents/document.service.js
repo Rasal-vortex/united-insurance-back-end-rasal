@@ -49,7 +49,9 @@ export const documentService = {
       const relatedRecords = [];
       if (metadata.customerId)
         relatedRecords.push(
-          await customerModel.findFirst({ id: metadata.customerId, ...scope }),
+          auth.userType === "ADMIN"
+            ? await customerModel.findFirst({ id: metadata.customerId })
+            : await customerModel.findFirstInBranch(metadata.customerId, branchId),
         );
       if (metadata.policyId)
         relatedRecords.push(
